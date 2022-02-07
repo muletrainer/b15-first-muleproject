@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="2018a429-d836-49c1-9007-7495757db9e4" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="a-first-applicationFlow2" doc:id="b8352da1-2794-4820-860d-ab62a6f28f5e" >
+		<ee:transform doc:name="Transform Message" doc:id="9d9eeeb4-328b-4543-a81e-1ae95ed042a8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://mynamespace.com/
+---
+{
+	ns0#address @("type": payload.address.addType): {
+		ns0#street: {
+			ns0#name: payload.address.street.name,
+			ns0#number: payload.address.street.number
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="xml-json" doc:id="03d0ecc2-cd47-4e25-a240-e7346f684b96" >
+		<ee:transform doc:name="Transform Message" doc:id="0aca640a-87c3-48ae-beb3-0e82b460980e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+ns ns0 http://mynamespace.com/
+---
+{
+	address: {
+		addType: payload.ns0#address.@"type",
+		street: {
+			name: payload.ns0#address.ns0#street.ns0#name,
+			number: payload.ns0#address.ns0#street.ns0#number
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="test-flow" doc:id="dd6d869b-d69e-439f-86bc-ca364f4a315b" >
+		<ee:transform doc:name="Transform Message" doc:id="1e9e1143-2ba7-41f2-9611-32b99bc897be" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Hi " ++ payload ++ ", Welcome to Mulesoft !!"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="a-first-applicationFlow" doc:id="30894972-6f4a-4ddd-ae93-2b53b6bd4d9c" >
+		<http:listener doc:name="Listener" doc:id="78800e9c-b90d-4c9c-a7aa-bc47f1e5fc8a" config-ref="HTTP_Listener_config" path="/hai">
+		</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="0eaed3c3-eb1f-4683-ac72-35064eeab6e4" message="---- request recvied -----"/>
+		<ee:transform doc:name="Transform Message" doc:id="54e62b4c-dd1f-449b-b42a-89affd714eab" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+lookup("test-flow", "MaxMule")]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="72d7690c-bcd6-420d-b73a-6b96a8e45768" message="--- request processed ----"/>
+	</flow>
+</mule>
